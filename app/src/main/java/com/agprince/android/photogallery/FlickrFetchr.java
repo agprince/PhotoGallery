@@ -34,7 +34,7 @@ public class FlickrFetchr {
                     .build().toString();
             String jsonString = getUrlString(url);
             JSONObject jsonBody = new JSONObject(jsonString);
-            parseItem(items,jsonBody);
+            parseItem(items, jsonBody);
             LogUtil.i("Received JSON: " + jsonString);
         } catch (IOException ioe) {
             LogUtil.e("Failed to fetch items", ioe);
@@ -49,12 +49,13 @@ public class FlickrFetchr {
         JSONObject photosJson = jsonBody.getJSONObject("photos");
         JSONArray photoJsonArray = photosJson.getJSONArray("photo");
 
+
         for (int i = 0; i < photoJsonArray.length(); i++) {
             JSONObject photoJson = photoJsonArray.getJSONObject(i);
             GalleryItem item = new GalleryItem();
             item.setId(photoJson.getString("id"));
             item.setCaption(photoJson.getString("title"));
-            if(!photoJson.has("url_s")){
+            if (!photoJson.has("url_s")) {
                 continue;
             }
             item.setUrl(photoJson.getString("url_s"));
@@ -63,6 +64,7 @@ public class FlickrFetchr {
         }
 
     }
+
 
     public byte[] getUrlBytes(String urlSpec) throws IOException {
 
