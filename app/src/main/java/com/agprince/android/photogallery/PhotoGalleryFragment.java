@@ -21,6 +21,8 @@ import java.util.List;
 
 public class PhotoGalleryFragment extends Fragment {
 
+    private int mCurrentPage;
+    private int maxPage;
     private RecyclerView mPhotoRecyclerView;
     private List<GalleryItem> mItems = new ArrayList<>();
 
@@ -43,7 +45,12 @@ public class PhotoGalleryFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_photo_gallery,container,false);
         mPhotoRecyclerView = view.findViewById(R.id.photo_recycler_view);
         mPhotoRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(),3));
-
+        mPhotoRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+            }
+        });
         setAdapter();
 
         return view;
@@ -59,7 +66,7 @@ public class PhotoGalleryFragment extends Fragment {
         @Override
         protected List<GalleryItem> doInBackground(Void... voids) {
 
-            return  new FlickrFetchr().fetchItems();
+            return  new FlickrFetchr().fetchItems(1);
 
         }
 
