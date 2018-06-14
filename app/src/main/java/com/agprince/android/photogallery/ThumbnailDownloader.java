@@ -16,13 +16,25 @@ public class ThumbnailDownloader<T> extends HandlerThread {
     private static final String TAG = "ThumbnailDownloader";
     private static final int MESSAGE_DOWNLOAD = 0;
     private Handler mReqquestHandler;
+    private Handler mResponseHandler;
+    private ThumbnailDownloadListener<T> mThumbnailDownloadListener;
     private ConcurrentMap<T, String> mRequestMap = new ConcurrentHashMap<>();
 
     private Boolean mHasQuit = false;
 
-    public ThumbnailDownloader() {
+    public ThumbnailDownloader(Handler responseHandler) {
         super(TAG);
+        mResponseHandler = responseHandler;
     }
+
+    public interface ThumbnailDownloadListener<T>{
+        void onThumbnailDownloaded(T target,Bitmap thumbnail);
+    }
+    public void setOnThumbnailDownloadListener(ThumbnailDownloadListener listener){
+        mThumbnailDownloadListener = listener;
+
+    }
+
 
     @Override
     protected void onLooperPrepared() {
@@ -51,8 +63,18 @@ public class ThumbnailDownloader<T> extends HandlerThread {
 
         try {
             byte[] bytes = new FlickrFetchr().getUrlBytes(url);
-            Bitmap bitmap = BitmapFactory.decodeByteArray(bytes,0,bytes.length);
+            final Bitmap bitmap = BitmapFactory.decodeByteArray(bytes,0,bytes.length);
             LogUtil.d("bitmap create ");
+            mResponseHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if(mRequestMap.get(target)!=url||mHasQuit){
+                        return;
+                    }
+                    mRequestMap.remove(target);
+                    mThumbnailDownloadListener.onThumbnailDownloaded(target,bitmap);
+                }
+            });
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -67,6 +89,11 @@ public class ThumbnailDownloader<T> extends HandlerThread {
         return super.quit();
     }
 
+    public void clearQueue(){
+        mReqquestHandler.removeMessages(MESSAGE_DOWNLOAD);
+        mRequestMap.clear();
+    }
+
     public void queueThumbnail(T target, String url) {
 
         LogUtil.d("Got a url : " + url);
@@ -79,4 +106,5 @@ public class ThumbnailDownloader<T> extends HandlerThread {
         }
 
     }
+
 }
