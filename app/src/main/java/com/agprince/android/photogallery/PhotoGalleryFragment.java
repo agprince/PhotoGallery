@@ -20,6 +20,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import org.w3c.dom.Text;
@@ -32,6 +33,7 @@ import java.util.List;
 public class PhotoGalleryFragment extends Fragment {
 
     private RecyclerView mPhotoRecyclerView;
+    private ProgressBar mLoadProgressBar;
     private List<GalleryItem> mItems = new ArrayList<>();
     private ThumbnailDownloader<PhotoHolder> mThumbnailDownloader;
 
@@ -44,7 +46,7 @@ public class PhotoGalleryFragment extends Fragment {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
         setHasOptionsMenu(true);
-        updateItems();
+
         Handler repsonseHandler = new Handler();
         mThumbnailDownloader = new ThumbnailDownloader<>(repsonseHandler);
         mThumbnailDownloader.setOnThumbnailDownloadListener(new ThumbnailDownloader.ThumbnailDownloadListener<PhotoHolder>() {
@@ -67,7 +69,10 @@ public class PhotoGalleryFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_photo_gallery,container,false);
         mPhotoRecyclerView = view.findViewById(R.id.photo_recycler_view);
         mPhotoRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(),3));
+        mLoadProgressBar = view.findViewById(R.id.loading_indicator);
+        mLoadProgressBar.setVisibility(View.GONE);
 
+        updateItems();
         setAdapter();
 
         return view;
@@ -87,7 +92,10 @@ public class PhotoGalleryFragment extends Fragment {
             public boolean onQueryTextSubmit(String query) {
                 LogUtil.d("QueryTextSubmit: "+query);
                 QueryPreferences.setStoredQuery(getActivity(),query);
+                mItems.clear();
                 updateItems();
+                searchView.clearFocus();
+                searchView.onActionViewCollapsed();
                 return true;
             }
 
@@ -151,6 +159,15 @@ public class PhotoGalleryFragment extends Fragment {
         }
 
         @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            if(mItems.size()==0){
+                mLoadProgressBar.setVisibility(View.VISIBLE);
+                mPhotoRecyclerView.setVisibility(View.GONE);
+            }
+        }
+
+        @Override
         protected List<GalleryItem> doInBackground(Void... voids) {
 
             if (mQuery == null) {
@@ -165,6 +182,10 @@ public class PhotoGalleryFragment extends Fragment {
         protected void onPostExecute(List<GalleryItem> galleryItems) {
             super.onPostExecute(galleryItems);
             mItems = galleryItems;
+
+            mLoadProgressBar.setVisibility(View.GONE);
+            mPhotoRecyclerView.setVisibility(View.VISIBLE);
+
             setAdapter();
 
         }
