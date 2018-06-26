@@ -1,5 +1,6 @@
 package com.agprince.android.photogallery;
 
+import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.IntentService;
 import android.app.Notification;
@@ -19,8 +20,13 @@ import java.util.concurrent.TimeUnit;
 
 public class PollService extends IntentService {
     private static final String TAG = "PollService";
+    public static final String ACTION_SHOW_NOTIFICATION = "com.agprince.android.photogallery.SHOW_NOTIFICATION";
+    public static final String PERM_PRIVATE = "com.agprince.android.photogallery.PRIVATE";
+    public static final String REQUEST_CODE = "REQUEST_CODE";
+    public static final String NOTIFICATION = "NOTIFICATION";
 
     private static final long POLL_INTERVAL_MS = TimeUnit.MINUTES.toMillis(1);
+    //private static final long POLL_INTERVAL_MS = TimeUnit.MINUTES.toMillis(5);
 
     public static Intent newIntent(Context context){
         return new Intent(context,PollService.class);
@@ -43,6 +49,8 @@ public class PollService extends IntentService {
             alarmManager.cancel(pi);
             pi.cancel();
         }
+
+        QueryPreferences.setAlarmOn(context,isOn);
     }
     public static boolean isServiceAlarmOn(Context context){
         Intent i = PollService.newIntent(context);
@@ -87,13 +95,22 @@ public class PollService extends IntentService {
                    .setAutoCancel(true)
                    .build();
 
-           NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(this);
-           notificationManagerCompat.notify(0,notification);
+           //NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(this);
+           //notificationManagerCompat.notify(0,notification);
+
+           //sendBroadcast(new Intent(ACTION_SHOW_NOTIFICATION),PERM_PRIVATE);
+            showBackgroundNotification(0,notification);
 
 
         }
         QueryPreferences.setLastResultId(this,resultid);
 
+    }
+    private void showBackgroundNotification(int requstCode,Notification notification){
+        Intent i = new Intent(ACTION_SHOW_NOTIFICATION);
+        i.putExtra(REQUEST_CODE,requstCode);
+        i.putExtra(NOTIFICATION,notification);
+        sendOrderedBroadcast(i,PERM_PRIVATE,null,null, Activity.RESULT_OK,null,null);
     }
 
     private boolean isNetworkAvailableAndConnected(){
