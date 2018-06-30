@@ -26,7 +26,7 @@ public class NotificationReceiver extends BroadcastReceiver {
         NotificationManagerCompat managerCompat = NotificationManagerCompat.from(context);
         managerCompat.notify(requestCode,notification);
 
-        mReceiver.goAsync();
+
 
 
     }
